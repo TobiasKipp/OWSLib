@@ -223,7 +223,7 @@ class WebProcessingService(object):
         # build metadata objects
         return self._parseProcessMetadata(rootElement)
         
-    def execute(self, identifier, inputs, output=None, request=None, response=None):
+    def execute(self, identifier, inputs, output=None, request=None, response=None, asynchronous=True):
         """
         Submits a WPS process execution request. 
         Returns a WPSExecution object, which can be used to monitor the status of the job, and ultimately retrieve the result.
@@ -233,6 +233,7 @@ class WebProcessingService(object):
         output: optional identifier for process output reference (if not provided, output will be embedded in the response)
         request: optional pre-built XML request document, prevents building of request from other arguments
         response: optional pre-built XML response document, prevents submission of request to live WPS server
+        asynchronous: If true run asynchronous, else run synchronous.
         """
         
         # instantiate a WPSExecution object
@@ -241,7 +242,7 @@ class WebProcessingService(object):
 
         # build XML request from parameters 
         if request is None:
-           requestElement = execution.buildRequest(identifier, inputs, output)
+           requestElement = execution.buildRequest(identifier, inputs, output, asynchronous)
            request = etree.tostring( requestElement )   
         if self.verbose==True:
                print request
@@ -471,7 +472,7 @@ class WPSExecution():
         self.processOutputs=[]
         
         
-    def buildRequest(self, identifier, inputs=[], output=None):
+    def buildRequest(self, identifier, inputs=[], output=None, asynchronous=True):
         """
         Method to build a WPS process request.
         identifier: the requested process identifier
@@ -549,7 +550,7 @@ class WPSExecution():
         if output is not None:
             responseFormElement = etree.SubElement(root, nspath_eval('wps:ResponseForm', namespaces))
             responseDocumentElement = etree.SubElement(responseFormElement, nspath_eval('wps:ResponseDocument', namespaces), 
-                                                       attrib={'storeExecuteResponse':'true', 'status':'true'} )
+                                                       attrib={'storeExecuteResponse':'true', 'status':str(asynchronous).lower()} )
             if isinstance(output, str):
                 self._add_output(responseDocumentElement, output, asReference=True)
             elif isinstance(output, list):
