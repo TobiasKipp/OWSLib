@@ -547,17 +547,19 @@ class WPSExecution():
         #     </wps:Output>
         #   </wps:ResponseDocument>
         # </wps:ResponseForm>
-        if output is not None:
-            responseFormElement = etree.SubElement(root, nspath_eval('wps:ResponseForm', namespaces))
-            responseDocumentElement = etree.SubElement(responseFormElement, nspath_eval('wps:ResponseDocument', namespaces), 
-                                                       attrib={'storeExecuteResponse':'true', 'status':str(asynchronous).lower()} )
-            if isinstance(output, str):
-                self._add_output(responseDocumentElement, output, asReference=True)
-            elif isinstance(output, list):
-                for (identifier,as_reference) in output:
-                    self._add_output(responseDocumentElement, identifier, asReference=as_reference)
-            else:
-                raise Exception('output parameter is neither string nor list. output=%s' % output)
+        async = str(asynchronous).lower()
+        responseFormElement = etree.SubElement(root, nspath_eval('wps:ResponseForm', namespaces))
+        responseDocumentElement = etree.SubElement(responseFormElement, nspath_eval('wps:ResponseDocument', namespaces), 
+                                                   attrib={'storeExecuteResponse': async, 'status':async} )
+        if isinstance(output, str):
+            self._add_output(responseDocumentElement, output, asReference=True)
+        elif isinstance(output, list):
+            for (identifier,as_reference) in output:
+                self._add_output(responseDocumentElement, identifier, asReference=as_reference)
+        elif output is None:
+            pass
+        else:
+            raise Exception('output parameter is neither string nor list. output=%s' % output)
         return root
 
     def _add_output(self, element, identifier, asReference=False):
